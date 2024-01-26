@@ -4,38 +4,45 @@
 # Script executed at start
 #
 
-# Bail out on any error
+# Exit on first failure.
 set -e
+
+# Echo commands before executing them.
+set -x
+
+# Exit on unset variable.
+set -u
 
 case "$1" in
   start)
-    #udevd --daemon
-    #udevadm trigger
-    if [ ! -e /dev/input/event0 ]; then
-        echo ""
-        echo "No input device detected"
-        echo "Remove micro-USB cable and attach mouse to continue"
-        echo ""
-        until [ -e /dev/input/event0 ]
-        do
-            sleep 0.1
-        done
-        clear
-    fi
 
-    echo Starting rpi-imager
+    # We need some sleep time to let the system set up and create files.
+    sleep 10.0
+
+    echo "Starting a TinyPilot devboot"
+
+    # Get a timestamp to set the date for rpi-imager.
+    timestamp=$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep 'Date:' | awk -F ': ' '{split($2, a, / /); months="JanFebMarAprMayJunJulAugSepOctNovDec"; month=(index(months, a[3])+2)/3; printf "%04d-%02d-%02d %s", a[4], month, a[2], a[5]}')
+    date --set "${timestamp}"
+
+    # Use your secret gist url.
+    gist_url=https://gist.githubusercontent.com/
+    # Get the image url from the secret gist.
+    image_url=$(wget -qSO- "${gist_url}")
+
     export QT_QPA_EGLFS_ALWAYS_SET_MODE=1
-    PATH=/bin:/sbin:/usr/bin:/usr/sbin rpi-imager 2>/tmp/debug
+    PATH=/bin:/sbin:/usr/bin:/usr/sbin rpi-imager --cli --disable-verify --debug "${image_url}" /dev/mmcblk0
+
     sync
     reboot -f
     ;;
 
   stop)
     ;;
-  
+
   *)
     echo "Usage: $0 {start|stop}"
-    exit 1  
+    exit 1
     ;;
 esac
 
