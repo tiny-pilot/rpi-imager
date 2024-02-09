@@ -22,16 +22,17 @@ case "$1" in
     echo "Starting a TinyPilot devboot"
 
     # Get a timestamp to set the date for rpi-imager.
-    timestamp=$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep 'Date:' | awk -F ': ' '{split($2, a, / /); months="JanFebMarAprMayJunJulAugSepOctNovDec"; month=(index(months, a[3])+2)/3; printf "%04d-%02d-%02d %s", a[4], month, a[2], a[5]}')
-    date --set "${timestamp}"
+    TIMESTAMP=$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep 'Date:' | awk -F ': ' '{split($2, a, / /); months="JanFebMarAprMayJunJulAugSepOctNovDec"; month=(index(months, a[3])+2)/3; printf "%04d-%02d-%02d %s", a[4], month, a[2], a[5]}')
+    date --set "${TIMESTAMP}"
 
-    # Use your secret gist url.
-    gist_url=https://gist.githubusercontent.com/
-    # Get the image url from the secret gist.
-    image_url=$(wget -qSO- "${gist_url}")
+    # Find the correct image URL based on the device serial number.
+    SERIAL_NUMBER="$(wget -qSO- /sys/firmware/devicetree/base/serial-number)"
+    LOOKUP_URL="https://storage.googleapis.com/tinypilot-devboot-wv9my/${SERSERIAL_NUMBERIAL}.txt"
+    GIST_URL=$(wget -qSO- "${LOOKUP_URL}")
+    IMAGE_URL=$(wget -qSO- "${GIST_URL}")
 
     export QT_QPA_EGLFS_ALWAYS_SET_MODE=1
-    PATH=/bin:/sbin:/usr/bin:/usr/sbin rpi-imager --cli --disable-verify --debug "${image_url}" /dev/mmcblk0
+    PATH=/bin:/sbin:/usr/bin:/usr/sbin rpi-imager --cli --disable-verify --debug "${IMAGE_URL}" /dev/mmcblk0
 
     sync
     reboot -f
