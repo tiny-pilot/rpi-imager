@@ -27,7 +27,7 @@ case "$1" in
 
     # Find the correct image URL based on the device serial number.
     SERIAL_NUMBER="$(cat /sys/firmware/devicetree/base/serial-number)"
-    LOOKUP_URL="https://storage.googleapis.com/tinypilot-devboot-wv9my/${SERSERIAL_NUMBERIAL}.txt"
+    LOOKUP_URL="https://storage.googleapis.com/tinypilot-devboot-wv9my/${SERIAL_NUMBER}.txt"
     GIST_URL=$(wget -qSO- "${LOOKUP_URL}")
     IMAGE_URL=$(wget -qSO- "${GIST_URL}")
 
